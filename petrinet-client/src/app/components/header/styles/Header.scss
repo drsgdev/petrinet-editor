@@ -1,0 +1,42 @@
+@import "node_modules/bootstrap/scss/functions";
+@import "node_modules/bootstrap/scss/variables";
+@import "node_modules/bootstrap/scss/mixins";
+
+.nav {
+  background-color: $primary;
+  height: 3em;
+  padding-top: 0.1em;
+
+  .nav-item .nav-link {
+    text-decoration: none;
+    color: white !important;
+
+    &:hover {
+      color: $gray-500 !important;
+    }
+
+    & > a {
+      text-decoration: none;
+      color: $gray-400 !important;
+
+      &:hover {
+        color: white !important;
+      }
+
+      &.active {
+        text-decoration: none;
+        color: white !important;
+
+        &:hover {
+          color: $gray-500 !important;
+        }
+      }
+    }
+
+    &.disabled > a {
+      text-decoration: none;
+      cursor: not-allowed !important;
+      pointer-events: painted !important;
+    }
+  }
+}

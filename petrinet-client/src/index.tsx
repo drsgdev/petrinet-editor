@@ -1,18 +1,17 @@
 import React from "react";
+import { DndProvider } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
 import ReactDOM from "react-dom";
-import { connect, Provider } from "react-redux";
-import { actionCreators } from "./app/components/counter/slices/counter";
-import App from "./App";
+import { Provider } from "react-redux";
+import App from "./app/components/app";
 import store from "./app/store";
-import "./index.css";
-
-const mapState = (state: any) => state;
-
-const ConnectedApp = connect(mapState, actionCreators)(App);
+import "./index.scss";
 
 ReactDOM.render(
   <Provider store={store}>
-    <ConnectedApp />
+    <DndProvider backend={HTML5Backend}>
+      <App />
+    </DndProvider>
   </Provider>,
   document.getElementById("root")
 );
