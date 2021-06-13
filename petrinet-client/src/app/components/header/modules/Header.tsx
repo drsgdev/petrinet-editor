@@ -25,7 +25,7 @@ function Header(props: HeaderProps) {
   ) : (
     <Nav.Link
       onClick={() => {
-        signin && signin("kek");
+        signin && signin("profile");
       }}
     >
       Sign in

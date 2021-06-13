@@ -3,13 +3,40 @@
 @import "node_modules/bootstrap/scss/mixins";
 
 $size: 3em;
+$token-size: 0.5em;
 
 .place {
   border-radius: $size;
+  display: flex;
+  align-items: center;
+  padding: 0.5em;
 }
 
 .transition {
   border-radius: 0.5em;
+}
+
+.token-wrapper {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.token {
+  min-width: $token-size;
+  min-height: $token-size;
+
+  border-radius: $token-size;
+  background-color: white;
+  margin: 0.1em;
+
+  pointer-events: none;
+
+  &.text {
+    background-color: transparent;
+    color: white;
+  }
 }
 
 .transition,
@@ -19,16 +46,25 @@ $size: 3em;
   height: $size;
   color: white;
 
+  &.cm {
+    cursor: copy !important;
+  }
+
   &.dragging {
     opacity: 0.5;
+    cursor: move;
   }
 
   &:hover {
-    cursor: move;
+    cursor: pointer;
   }
 
   > label {
     font-size: 0.7em;
     text-align: center;
+    pointer-events: none;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
   }
 }
