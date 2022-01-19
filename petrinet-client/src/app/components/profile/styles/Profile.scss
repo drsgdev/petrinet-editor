@@ -2,26 +2,18 @@
 @import "node_modules/bootstrap/scss/variables";
 @import "node_modules/bootstrap/scss/mixins";
 
-.toolbar-wrapper,
-.editor {
+.user-info,
+.saved-nets {
   background-color: $gray-200;
+  height: 50vh;
+
   border-radius: 1em;
-  padding: 1em;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.editor {
-  flex: 1 1 auto;
-  height: 90vh;
-}
-
-.toolbar-wrapper {
-  height: fit-content;
-}
-
-.btn {
+.card {
   border-radius: 1em;
-}
-
-.arc {
-  cursor: pointer;
 }

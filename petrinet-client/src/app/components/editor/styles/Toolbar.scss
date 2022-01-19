@@ -14,6 +14,14 @@ $token-size: 0.5em;
 
 .transition {
   border-radius: 0.5em;
+
+  &:hover {
+    color: $gray-500;
+  }
+
+  &:active {
+    color: white;
+  }
 }
 
 .token-wrapper {
@@ -58,10 +66,14 @@ $token-size: 0.5em;
   &:hover {
     cursor: pointer;
   }
+}
 
-  > label {
-    font-size: 0.7em;
-    text-align: center;
+.label {
+  justify-content: center;
+
+  & > label {
+    font-size: 0.8em;
+    text-align: justify;
     pointer-events: none;
     text-overflow: ellipsis;
     overflow: hidden;

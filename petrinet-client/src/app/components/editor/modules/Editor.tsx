@@ -39,11 +39,19 @@ interface Element {
   [id: string]: InstrumentProps;
 }
 
-export default function Editor() {
+export interface EditorProps {
+  data?: any;
+}
+
+export default function Editor(props: EditorProps) {
+  const { data } = props;
   const [elements, setElements] = useState<{
     [DragTypes.PLACE]: Element;
     [DragTypes.TRANSITION]: Element;
-  }>({ [DragTypes.PLACE]: {}, [DragTypes.TRANSITION]: {} });
+  }>({
+    [DragTypes.PLACE]: {},
+    [DragTypes.TRANSITION]: {},
+  });
   const [arcs, setArcs] = useState<Arc[]>([]);
   const [arcElements, setArcElements] = useState<JSX.Element[]>([]);
   const [marking, setMarking] = useState<SimpleMarking>({});
@@ -62,12 +70,15 @@ export default function Editor() {
             start={arc.start}
             end={arc.end}
             curveness={0.5}
+            strokeWidth={2}
             passProps={{
               className: "arc",
               onClick: () => {
                 setArcs(
                   arcs.filter(
                     (other) =>
+                      other.start &&
+                      other.end &&
                       !(other.start === arc.start && other.end === arc.end)
                   )
                 );
@@ -172,11 +183,12 @@ export default function Editor() {
   );
 
   const moveElement = useCallback(
-    (item: DragItem, left?: any, top?: any) => {
+    (item: DragItem, left?: number, top?: number) => {
       const props = {
         id: item.id,
         type: item.type,
         style: { top: top, left: left, position: "fixed" },
+        name: item.name,
       };
       setElements(
         update(elements, {
@@ -228,6 +240,7 @@ export default function Editor() {
           [id]: { $set: tokens },
         })
       );
+      setNet(null);
     },
     [marking]
   );
@@ -303,6 +316,8 @@ export default function Editor() {
 
   useEffect(() => {
     const moves = net?.enabledMoves();
+    updateMarking(net?.tokens);
+
     let transitions: Element = {};
     Object.values(elements[DragTypes.TRANSITION]).forEach((transition) => {
       const move = moves?.find((move) => move.transition.key === transition.id);
@@ -327,16 +342,16 @@ export default function Editor() {
     );
   }, [net]);
 
-  const run = useCallback(() => {
-    if (running) {
-      setRunning(false);
-      return;
-    }
+  const updateMarking = useCallback((tokens) => {
+    const newMarking: SimpleMarking = {};
+    if (tokens) {
+      Object.keys(tokens).forEach((placeId) => {
+        newMarking[placeId] = tokens[placeId].length;
+      });
 
-    const parsedNet = parseNet();
-    setRunning(true);
-    setNet(PetriNet.fromObject(parsedNet).initialMarking);
-  }, [parseNet, running]);
+      setMarking(newMarking);
+    }
+  }, []);
 
   const fire = useCallback(
     (id: string) => {
@@ -344,20 +359,29 @@ export default function Editor() {
         ?.enabledMoves()
         .find((move) => move.transition.key === id);
       if (move) {
-        const tokens = move.marking?.tokens;
-        const newMarking: SimpleMarking = {};
-        if (tokens) {
-          Object.keys(tokens).forEach((placeId) => {
-            newMarking[placeId] = tokens[placeId].length;
-          });
-
-          setMarking(newMarking);
-        }
         setNet(move.marking);
       }
     },
     [net]
   );
+
+  const run = useCallback(() => {
+    if (running) {
+      setRunning(false);
+
+      return;
+    }
+
+    if (!net) {
+      const parsedNet = PetriNet.fromObject(parseNet());
+      setNet(parsedNet.initialMarking);
+    }
+    setRunning(true);
+  }, [net, parseNet, running]);
+
+  const reset = useCallback(() => {
+    setNet(net?.net.initialMarking);
+  }, [net]);
 
   const renderElements = useCallback(
     (type: DragTypes) => {
@@ -395,48 +419,112 @@ export default function Editor() {
     ]
   );
 
-  const connectButton = (
-    <Button
-      className={"mb-2" + (connectionMode ? " btn-success" : "")}
-      onClick={() => {
-        setConnectionMode(!connectionMode);
-      }}
-      disabled={
-        elementsCount[DragTypes.PLACE] === 0 ||
-        elementsCount[DragTypes.TRANSITION] === 0
-      }
-    >
-      Connect
-    </Button>
+  const handleExport = useCallback((jsonData) => {
+    const fileData = JSON.stringify(jsonData);
+    const blob = new Blob([fileData], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.download = `net.json`;
+    link.href = url;
+    link.click();
+  }, []);
+
+  const exportButton = useMemo(
+    () => (
+      <Button
+        className={"mb-2"}
+        onClick={() => {
+          const json = {
+            elements,
+            arcs,
+            marking,
+          };
+          handleExport(json);
+        }}
+        disabled={
+          elementsCount[DragTypes.PLACE] === 0 ||
+          elementsCount[DragTypes.TRANSITION] === 0
+        }
+      >
+        Export
+      </Button>
+    ),
+    [arcs, elements, elementsCount, handleExport, marking]
   );
 
-  const resetButton = (
-    <Button
-      className="mb-2"
-      variant="danger"
-      disabled={
-        elementsCount[DragTypes.PLACE] === 0 &&
-        elementsCount[DragTypes.TRANSITION] === 0
-      }
-      onClick={() => {
-        setElements({
-          [DragTypes.PLACE]: {},
-          [DragTypes.TRANSITION]: {},
-        });
-        setArcs([]);
-        setArcElements([]);
-        setMarking({});
-      }}
-    >
-      Reset
-    </Button>
+  const connectButton = useMemo(
+    () => (
+      <Button
+        className={"mb-2" + (connectionMode ? " btn-success" : "")}
+        onClick={() => {
+          setConnectionMode(!connectionMode);
+        }}
+        disabled={
+          elementsCount[DragTypes.PLACE] === 0 ||
+          elementsCount[DragTypes.TRANSITION] === 0
+        }
+      >
+        Connect
+      </Button>
+    ),
+    [connectionMode, elementsCount]
   );
 
-  const startButton = (
-    <Button disabled={arcs.length === 0} onClick={run}>
-      {running ? "Stop" : "Start"}
-    </Button>
+  const resetButton = useMemo(
+    () => (
+      <Button
+        className="mb-2"
+        variant="danger"
+        disabled={
+          elementsCount[DragTypes.PLACE] === 0 &&
+          elementsCount[DragTypes.TRANSITION] === 0
+        }
+        onClick={() => {
+          setRunning(false);
+          setConnectionMode(false);
+          setElements({
+            [DragTypes.PLACE]: {},
+            [DragTypes.TRANSITION]: {},
+          });
+          setArcs([]);
+          setArcElements([]);
+          setMarking({});
+        }}
+      >
+        Reset
+      </Button>
+    ),
+    [elementsCount]
   );
+
+  const startButton = useMemo(
+    () => (
+      <div className="d-flex flex-row justify-content-between">
+        <Button disabled={arcs.length === 0} onClick={run}>
+          {running ? "❚❚" : "▶"}
+        </Button>
+        <Button disabled={!running} onClick={reset}>
+          ⭯
+        </Button>
+      </div>
+    ),
+    [arcs.length, reset, run, running]
+  );
+
+  useEffect(() => {
+    if (data.elements && data.arcs && data.marking) {
+      setElements(data.elements);
+      setArcs(data?.arcs);
+      setMarking(data?.marking);
+    } else {
+      setElements({
+        [DragTypes.PLACE]: {},
+        [DragTypes.TRANSITION]: {},
+      });
+      setArcs([]);
+      setMarking({});
+    }
+  }, [data]);
 
   return (
     <Container fluid>
@@ -445,6 +533,7 @@ export default function Editor() {
           <Col className="d-flex flex-column align-items-center toolbar-wrapper mb-3">
             <Toolbar />
           </Col>
+          {exportButton}
           {connectButton}
           {resetButton}
           {startButton}

@@ -3,20 +3,19 @@ import { NavLink, useHistory } from "react-router-dom";
 import "../styles/Header.scss";
 
 export interface HeaderProps {
-  signin?: (name: string) => void;
   logout?: () => void;
-  isLoggedIn?: boolean;
+  loggedIn?: boolean;
   username?: string;
 }
 
 function Header(props: HeaderProps) {
-  const { isLoggedIn, signin, logout, username } = props;
+  const { loggedIn, logout, username } = props;
   const history = useHistory();
 
-  const userProfileButton = isLoggedIn ? (
+  const userProfileButton = loggedIn ? (
     <Nav.Link
       onClick={() => {
-        logout && logout();
+        logout?.();
         history.push("/");
       }}
     >
@@ -25,10 +24,10 @@ function Header(props: HeaderProps) {
   ) : (
     <Nav.Link
       onClick={() => {
-        signin && signin("profile");
+        history.push("/login");
       }}
     >
-      Sign in
+      Login
     </Nav.Link>
   );
 
@@ -41,7 +40,7 @@ function Header(props: HeaderProps) {
   );
 
   return (
-    <Nav className="mb-2">
+    <Nav className="mb-3">
       <Container fluid>
         <Row className="justify-content-between">
           <Col>
@@ -56,7 +55,7 @@ function Header(props: HeaderProps) {
           <Col xs={1} md="auto">
             <Nav.Item>{userProfileButton}</Nav.Item>
           </Col>
-          {isLoggedIn ? <Col md="auto">{profileBadge}</Col> : null}
+          {loggedIn ? <Col md="auto">{profileBadge}</Col> : null}
         </Row>
       </Container>
     </Nav>

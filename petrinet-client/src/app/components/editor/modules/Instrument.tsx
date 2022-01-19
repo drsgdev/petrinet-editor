@@ -3,8 +3,7 @@ import {
   Button,
   FormControl,
   InputGroup,
-  Overlay,
-  Popover,
+  Modal, Popover
 } from "react-bootstrap";
 import { useDrag } from "react-dnd";
 import "../styles/Toolbar.scss";
@@ -63,7 +62,7 @@ export default function Instrument(props: InstrumentProps) {
 
   const [{ isDragging }, drag] = useDrag({
     type: type ?? DragTypes.PLACE,
-    item: { id, type, tokens },
+    item: { id, type, tokens, name },
     collect: (monitor: any) => ({
       isDragging: monitor.isDragging(),
     }),
@@ -84,10 +83,51 @@ export default function Instrument(props: InstrumentProps) {
         ? `${splittedId?.[0][0].toUpperCase()}-${splittedId?.[1]}`
         : id;
   }
-  if (enabled) {
-    label = "enabled";
-  }
 
+  const menu = (
+    <Modal show={isMenuVisible} onHide={() => setMenuVisible(false)}>
+      <Modal.Header closeButton />
+      <Modal.Body>
+        <label>Name</label>
+        <InputGroup className="mb-3">
+          <FormControl
+            className="rounded"
+            placeholder={name ?? "Input a name"}
+            aria-label="Name"
+            onChange={(event) => {
+              let name: string | undefined = event.target.value;
+              if (name.length === 0) name = undefined;
+              setName(id, type, name);
+            }}
+          />
+        </InputGroup>
+        {type === DragTypes.PLACE ? (
+          <div>
+            <label>Tokens</label>
+            <InputGroup className="mb-3">
+              <FormControl
+                className="rounded"
+                placeholder={tokens?.toString() ?? "No tokens"}
+                aria-label="Tokens"
+                onChange={(event) => {
+                  let tokens = parseInt(event.target.value);
+                  if (isNaN(tokens)) tokens = 0;
+                  setTokens(id, tokens);
+                }}
+              />
+            </InputGroup>
+          </div>
+        ) : null}
+        <Button
+          variant="danger"
+          size="sm"
+          onClick={() => onDelete({ id, type })}
+        >
+          Delete
+        </Button>
+      </Modal.Body>
+    </Modal>
+  );
   const popover = (
     <Popover id="instrument-menu" onMouseLeave={() => setMenuVisible(false)}>
       <Popover.Content>
@@ -133,51 +173,56 @@ export default function Instrument(props: InstrumentProps) {
   );
 
   const instrument = (
-    <div
-      className={
-        className +
-        (isDragging ? " dragging" : "") +
-        (connectionMode ? " cm" : "")
-      }
-      ref={drag}
-      id={id}
-      style={style}
-      onClick={(event) => {
-        if (connectionMode && !running) {
-          onClick(event);
-          return;
+    <div ref={drag} style={{ ...style, zIndex: 1000 }}>
+      <div
+        className={
+          className +
+          (isDragging ? " dragging" : "") +
+          (connectionMode ? " cm" : "")
         }
+        id={id}
+        onClick={(event) => {
+          if (connectionMode && !running) {
+            onClick(event);
+            return;
+          }
 
-        if (type === DragTypes.TRANSITION && enabled && running) {
-          fire(id);
-          return;
-        }
-      }}
-      onDoubleClick={(event) => {
-        setMenuVisible(!isMenuVisible);
-        setMenuToggle(event.target);
-      }}
-    >
-      {tokens !== 0 && Tokens ? (
-        <div className="token-wrapper">{Tokens}</div>
-      ) : (
-        <label className="pt-1 pl-1 pr-1" htmlFor={id}>
+          if (type === DragTypes.TRANSITION && enabled && running) {
+            fire(id);
+            return;
+          }
+        }}
+        onDoubleClick={(event) => {
+          setMenuVisible(!isMenuVisible);
+          setMenuToggle(event.target);
+        }}
+      >
+        {tokens !== 0 && Tokens ? (
+          <div className="token-wrapper">{Tokens}</div>
+        ) : null}
+        {enabled && type === DragTypes.TRANSITION ? (
+          <div className="token-wrapper">▶</div>
+        ) : null}
+      </div>
+      <div className="d-flex flex-row label">
+        <label className="pt-1" htmlFor={id}>
           {label}
         </label>
-      )}
+      </div>
     </div>
   );
 
   return (
     <div ref={InstrumentContainer}>
-      <Overlay
+      {/* <Overlay
         show={isMenuVisible}
         placement="top"
         target={menuToggle}
         container={InstrumentContainer}
       >
         {popover}
-      </Overlay>
+      </Overlay> */}
+      {menu}
       {instrument}
     </div>
   );

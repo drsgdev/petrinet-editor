@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
+    "@pseuco/colored-petri-nets": "^1.4.5",
     "@reduxjs/toolkit": "^1.6.0",
     "@types/jest": "^26.0.23",
     "@types/node": "^12.20.15",
@@ -16,7 +17,6 @@
     "react-dnd": "^14.0.2",
     "react-dnd-html5-backend": "^14.0.0",
     "react-dom": "^17.0.2",
-    "react-redux": "^7.2.4",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.3",
     "react-xarrows": "^1.7.0",
